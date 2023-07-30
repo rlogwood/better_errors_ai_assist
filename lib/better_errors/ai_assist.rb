@@ -177,7 +177,7 @@ module BetterErrors
     end
 
     public def ai_assistance
-      config_ai_assist("ai_assistance_google_and_chatgpt")
+      #config_ai_assist("ai_assistance_google_and_chatgpt")
       Rails.logger.info("ai_assistance called: ai method:#{ai_assist_method}")
       self.public_send(ai_assist_method)
     end
