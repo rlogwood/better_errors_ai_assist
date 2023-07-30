@@ -32,6 +32,7 @@ module BetterErrors
     attr_reader :exception, :env, :repls
 
     def initialize(exception, env)
+      super
       @exception = RaisedException.new(exception)
       @env = env
       @start_time = Time.now.to_f

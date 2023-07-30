@@ -11,3 +11,5 @@ gem 'gem-release'
 # gem "pry-byebug"
 
 gem "pycall", "~> 1.4"
+
+gem "google_search_results", "~> 2.2"
