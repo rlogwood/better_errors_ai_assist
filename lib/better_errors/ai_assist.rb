@@ -104,6 +104,25 @@ module BetterErrors
       search.run(f"{text}")
     end
 
+
+    public def google_search_lambda_str(text)
+      <<~LAMBDA
+       lambda do |#{text}|
+        params = {
+          engine: "google",
+          q: text,
+          api_key: ENV['SERPAPI_API_KEY']
+        }
+
+        search = GoogleSearch.new(params)
+        organic_results = search.get_hash[:organic_results]
+        Rails.logger.info("google search results:\n\#{organic_results}")
+        organic_results
+      end
+      LAMBDA
+    end
+
+
     public def google_search_lamda
       lambda do |text|
         params = {
@@ -132,20 +151,40 @@ module BetterErrors
         organic_results
     end
 
+
+    private def python_search_func
+      pycode = <<~PYCODE
+      from langchain.serpapi import SerpAPIWrapper
+
+
+      def get_sol(text):
+          serpapi_api_key = "#{ENV['SERPAPI_API_KEY']}"  # serpapi key
+          search = SerpAPIWrapper(serpapi_api_key=serpapi_api_key)
+          res = search.run(f"{text}")
+          return res
+      PYCODE
+      Rails.logger.info(pycode)
+      pycode
+    end
+
     public def ai_assistance_google_and_chatgpt
       # "google and chat gpt not implemented yet"
       context = chat_gpt_prompt(include_stacktrace: false)
 
-      #search_func_google = google_search
+      search_func_google = self.method(:google_search_func)
       #search_func_py = PyCall.getattr(self, :get_sol)
       #search_func = self.method(:get_sol),
+
       tools_for_agent =[tool.new(name: "custom-search",
                                  #func: self.method(:get_sol),
                                  #func: :get_sol,
                                  #func: search_func_google,
                                  #func: search_func_py,
                                  #func: search_func,
-                                 func: :google_search_func.to_proc,
+                                 #func: :google_search_func.to_proc,
+                                 func: PyCall.eval(python_search_func),
+                                 #func: PyCall.eval('search_func_google.call()'),
+                                 #func: PyCall.eval(google_search_lambda_str(context)),
                                  description:"Useful for when you need to get the solution for rub or rails errors")]
 
       agent = agents.initialize_agent(tools:tools_for_agent,llm:ai_llm, agent:agentType.ZERO_SHOT_REACT_DESCRIPTION)
@@ -178,6 +217,7 @@ module BetterErrors
 
     public def ai_assistance
       #config_ai_assist("ai_assistance_google_and_chatgpt")
+      python_search_func
       Rails.logger.info("ai_assistance called: ai method:#{ai_assist_method}")
       self.public_send(ai_assist_method)
     end
