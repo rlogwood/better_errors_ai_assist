@@ -126,8 +126,9 @@ module BetterErrors
     end
 
     def session_openai_api_key
-      session = env['action_dispatch.request.unsigned_session_cookie']
-      session.present? ? session['openai_api_key'] : nil
+      ENV['OPENAI_API_KEY']
+      #session = env['action_dispatch.request.unsigned_session_cookie']
+      #session.present? ? session['openai_api_key'] : nil
     end
 
     def rails_params
